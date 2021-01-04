@@ -58,6 +58,7 @@ public class PadesDetachedController {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
         SignatureParameters parameters = new SignatureParameters();
+        parameters.setSignatureTime(System.currentTimeMillis());
         parameters.setContactInfo(request.getContactInfo());
         parameters.setLocation(request.getLocation());
         parameters.setReason(request.getReason());

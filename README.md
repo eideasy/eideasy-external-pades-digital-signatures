@@ -14,11 +14,12 @@ fileContent has to be sent in both calls because this is stateless service and d
 
 ## Docker
 
-This application can be found from Docker as well. 
+This application can be found from Docker as well.
+Following will remove any existing instance and install new one that will listen to localhost port 8082. 
 ```
 sudo docker stop eideasy_detached_pades -t 0
 sudo docker rm eideasy_detached_pades
-sudo docker run -p 8080:8084 --name=eideasy_detached_pades --restart always --log-driver syslog --log-opt tag="{{.Name}}/{{.ID}}" eideasy/pades-external-digital-signatures
+sudo docker run -d -p 127.0.0.1:8082:8084 --name=eideasy_detached_pades --restart always --log-driver syslog --log-opt tag="{{.Name}}/{{.ID}}" eideasy/pades-external-digital-signatures
 ```
 ## More info
 
