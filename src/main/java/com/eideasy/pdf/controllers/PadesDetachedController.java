@@ -68,7 +68,8 @@ public class PadesDetachedController {
         String digestString = HexUtils.toHexString(digest);
 
         PrepareResponse response = new PrepareResponse();
-        response.setDigest(digestString);
+        response.setHexDigest(digestString);
+        response.setDigest(Base64.getEncoder().encodeToString(digest));
         response.setSignatureTime(parameters.getSignatureTime());
 
         logger.info("Prepared PDF with digest: " + digestString);

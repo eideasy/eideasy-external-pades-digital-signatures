@@ -3,6 +3,7 @@ package com.eideasy.pdf.models;
 public class PrepareResponse {
     private long signatureTime;
     private String digest;
+    private String hexDigest;
 
     public long getSignatureTime() {
         return signatureTime;
@@ -10,6 +11,14 @@ public class PrepareResponse {
 
     public void setSignatureTime(long signatureTime) {
         this.signatureTime = signatureTime;
+    }
+
+    public String getHexDigest() {
+        return hexDigest;
+    }
+
+    public void setHexDigest(String hexDigest) {
+        this.hexDigest = hexDigest;
     }
 
     public String getDigest() {

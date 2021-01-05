@@ -6,7 +6,7 @@ This means that there is no need to transfer the whole PDF file to the place/dev
 There are 2 API calls.
 
 - **POST /api/detached-pades/prepare** - This call will get json with 1 field fileContent which holds the PDF content in base64 encoding.
-  Return value is signatureTime and SHA256 digest. digest is needed for creating CAdES signature and signatureTime is needed later when completing the digital signature
+  Return value is signatureTime and SHA256 digest in hex and base64. Base64 digest is needed for creating CAdES signature using eID Easy /api/signatures/prepare-files-for-signing API call and signatureTime is needed later when completing the digital signature.
 
 - **POST /api/detached-pades/complete** - This call will get 3 json fields. signatureTime that was received when preparing, signatureValue that is CAdES signature created separately and fileContent that is the original file
 
