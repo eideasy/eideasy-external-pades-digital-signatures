@@ -15,6 +15,10 @@ fileContent has to be sent in both calls because this is stateless service and d
 ## Docker
 
 This application can be found from Docker as well.
+```
+sudo docker build . --no-cache -t eideasy/pades-external-digital-signatures 
+```
+
 Following will remove any existing instance and install new one that will listen to localhost port 8082. 
 ```
 sudo docker stop eideasy_detached_pades -t 0

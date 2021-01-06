@@ -46,4 +46,15 @@ public class SignatureParameters {
     public void setReason(String reason) {
         this.reason = reason;
     }
+
+    @Override
+    public String toString() {
+        return "SignatureParameters{" +
+                "signatureTime=" + signatureTime +
+                ", signerName='" + signerName + '\'' +
+                ", contactInfo='" + contactInfo + '\'' +
+                ", location='" + location + '\'' +
+                ", reason='" + reason + '\'' +
+                '}';
+    }
 }

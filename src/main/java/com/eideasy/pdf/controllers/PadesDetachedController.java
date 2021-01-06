@@ -27,12 +27,6 @@ public class PadesDetachedController {
 
     @PostMapping("/api/detached-pades/complete")
     public CompleteResponse completePdfSigning(@RequestBody CompleteRequest request) throws IOException, NoSuchAlgorithmException {
-        logger.info("Completing PDF signature with value: " + request.getSignatureValue());
-
-        PDDocument document = PDDocument.load(Base64.getDecoder().decode(request.getFileContent()));
-        byte[] signatureBytes = Base64.getDecoder().decode(request.getSignatureValue());
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
         SignatureParameters parameters = new SignatureParameters();
         parameters.setSignatureTime(request.getSignatureTime());
         parameters.setContactInfo(request.getContactInfo());
@@ -40,23 +34,30 @@ public class PadesDetachedController {
         parameters.setReason(request.getReason());
         parameters.setSignerName(request.getSignerName());
 
-        signDetached(parameters, document, signatureBytes, baos);
-
+        logger.info("Completing PDF signature with value: " + request.getSignatureValue() + ", params=" + parameters);
         CompleteResponse response = new CompleteResponse();
-        response.setSignedFile(Base64.getEncoder().encodeToString(baos.toByteArray()));
+        PDDocument document = null;
+        try {
+            document = PDDocument.load(Base64.getDecoder().decode(request.getFileContent()));
 
-        logger.info("Completed PDF signature");
+            byte[] signatureBytes = Base64.getDecoder().decode(request.getSignatureValue());
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
+            signDetached(parameters, document, signatureBytes, baos);
+
+            response.setSignedFile(Base64.getEncoder().encodeToString(baos.toByteArray()));
+
+            logger.info("Completed PDF signature");
+        } catch (Throwable e) {
+            logger.error("PDF parsing failed", e);
+            response.setStatus("error");
+            response.setMessage(e.getMessage());
+        }
         return response;
     }
 
     @PostMapping("/api/detached-pades/prepare")
     public PrepareResponse preparePdf(@RequestBody PrepareRequest request) throws IOException, NoSuchAlgorithmException {
-        logger.info("Preparing PDF");
-
-        PDDocument document = PDDocument.load(Base64.getDecoder().decode(request.getFileContent()));
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
         SignatureParameters parameters = new SignatureParameters();
         parameters.setSignatureTime(System.currentTimeMillis());
         parameters.setContactInfo(request.getContactInfo());
@@ -64,16 +65,28 @@ public class PadesDetachedController {
         parameters.setReason(request.getReason());
         parameters.setSignerName(request.getSignerName());
 
-        byte[] digest = signDetached(parameters, document, null, baos);
-        String digestString = HexUtils.toHexString(digest);
-
+        logger.info("Preparing PDF, params=" + parameters);
         PrepareResponse response = new PrepareResponse();
-        response.setHexDigest(digestString);
-        response.setDigest(Base64.getEncoder().encodeToString(digest));
-        response.setSignatureTime(parameters.getSignatureTime());
+        PDDocument document = null;
+        try {
+            document = PDDocument.load(Base64.getDecoder().decode(request.getFileContent()));
 
-        logger.info("Prepared PDF with digest: " + digestString);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
+
+            byte[] digest = signDetached(parameters, document, null, baos);
+            String digestString = HexUtils.toHexString(digest);
+
+            response.setHexDigest(digestString);
+            response.setDigest(Base64.getEncoder().encodeToString(digest));
+            response.setSignatureTime(parameters.getSignatureTime());
+
+            logger.info("Prepared PDF with digest: " + digestString + ", signatureTime=" + response.getSignatureTime());
+        } catch (Throwable e) {
+            logger.error("PDF parsing failed", e);
+            response.setStatus("error");
+            response.setMessage(e.getMessage());
+        }
         return response;
     }
 

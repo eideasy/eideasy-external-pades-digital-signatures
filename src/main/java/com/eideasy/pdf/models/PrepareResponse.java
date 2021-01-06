@@ -1,6 +1,6 @@
 package com.eideasy.pdf.models;
 
-public class PrepareResponse {
+public class PrepareResponse extends ApiResponse {
     private long signatureTime;
     private String digest;
     private String hexDigest;

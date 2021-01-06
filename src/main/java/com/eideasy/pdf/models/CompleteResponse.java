@@ -1,6 +1,6 @@
 package com.eideasy.pdf.models;
 
-public class CompleteResponse {
+public class CompleteResponse extends ApiResponse {
     String signedFile;
 
     public String getSignedFile() {
