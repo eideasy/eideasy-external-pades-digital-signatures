@@ -14,8 +14,11 @@ fileContent has to be sent in both calls because this is stateless service and d
 
 ## Docker
 
-This application can be found from Docker as well.
+This application can be found from dockerhub also https://hub.docker.com/repository/docker/eideasy/pades-external-digital-signatures.
+
+To build locally use these commands
 ```
+maven clean package
 sudo docker build . --no-cache -t eideasy/pades-external-digital-signatures 
 ```
 
