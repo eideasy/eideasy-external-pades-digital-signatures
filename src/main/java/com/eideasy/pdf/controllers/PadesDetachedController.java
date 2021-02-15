@@ -1,7 +1,7 @@
 package com.eideasy.pdf.controllers;
 
 import com.eideasy.pdf.models.*;
-import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.cos.*;
 import org.apache.pdfbox.io.IOUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.interactive.digitalsignature.ExternalSigningSupport;
@@ -17,9 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.io.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
-import java.util.Calendar;
-import java.util.Date;
+import java.util.*;
 
 @RestController
 public class PadesDetachedController {
@@ -44,6 +42,8 @@ public class PadesDetachedController {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
             signDetached(parameters, document, signatureBytes, baos);
+
+            baos = addPadesDss(request.getPadesDssData(), baos);
 
             response.setSignedFile(Base64.getEncoder().encodeToString(baos.toByteArray()));
 
@@ -73,7 +73,6 @@ public class PadesDetachedController {
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-
             byte[] digest = signDetached(parameters, document, null, baos);
             String digestString = HexUtils.toHexString(digest);
 
@@ -90,7 +89,72 @@ public class PadesDetachedController {
         return response;
     }
 
-    public byte[] signDetached(SignatureParameters parameters, PDDocument document, byte[] signatureBytes, OutputStream out)
+    protected ByteArrayOutputStream addPadesDss(PadesDssData padesDssData, ByteArrayOutputStream baos) throws IOException {
+        if (padesDssData == null || (padesDssData.getCrls().size() == 0 && padesDssData.getCertificates().size() == 0 && padesDssData.getOcsps().size() == 0)) {
+            return baos;
+        }
+
+        InputStream is = new ByteArrayInputStream(baos.toByteArray());
+
+        PDDocument pdDocument = PDDocument.load(is);
+
+        final COSDictionary cosDictionary = pdDocument.getDocumentCatalog().getCOSObject();
+        cosDictionary.setItem("DSS", buildDSSDictionary(pdDocument, padesDssData));
+        cosDictionary.setNeedToBeUpdated(true);
+
+        baos = new ByteArrayOutputStream();
+
+        pdDocument.saveIncremental(baos);
+        return baos;
+    }
+
+    private COSDictionary buildDSSDictionary(PDDocument pdDocument, PadesDssData padesDssData)
+            throws IOException {
+        COSDictionary dss = new COSDictionary();
+
+        if (padesDssData.getCertificates().size() > 0) {
+            COSArray array = new COSArray();
+            for (String cert : padesDssData.getCertificates()) {
+                COSStream stream = pdDocument.getDocument().createCOSStream();
+                try (OutputStream unfilteredStream = stream.createOutputStream()) {
+                    unfilteredStream.write(Base64.getDecoder().decode(cert));
+                    unfilteredStream.flush();
+                }
+                array.add(stream);
+            }
+            dss.setItem("Certs", array);
+        }
+
+        if (padesDssData.getOcsps().size() > 0) {
+            COSArray array = new COSArray();
+            for (String cert : padesDssData.getOcsps()) {
+                COSStream stream = pdDocument.getDocument().createCOSStream();
+                try (OutputStream unfilteredStream = stream.createOutputStream()) {
+                    unfilteredStream.write(Base64.getDecoder().decode(cert));
+                    unfilteredStream.flush();
+                }
+                array.add(stream);
+            }
+            dss.setItem("OCSPs", array);
+        }
+
+        if (padesDssData.getCrls().size() > 0) {
+            COSArray array = new COSArray();
+            for (String cert : padesDssData.getCrls()) {
+                COSStream stream = pdDocument.getDocument().createCOSStream();
+                try (OutputStream unfilteredStream = stream.createOutputStream()) {
+                    unfilteredStream.write(Base64.getDecoder().decode(cert));
+                    unfilteredStream.flush();
+                }
+                array.add(stream);
+            }
+            dss.setItem("CRLs", array);
+        }
+
+        return dss;
+    }
+
+    protected byte[] signDetached(SignatureParameters parameters, PDDocument document, byte[] signatureBytes, OutputStream out)
             throws IOException, NoSuchAlgorithmException {
 
         if (document.getDocumentId() == null) {
@@ -116,7 +180,7 @@ public class PadesDetachedController {
         return digestBytes;
     }
 
-    private PDSignature createSignatureDictionary(final SignatureParameters parameters) {
+    protected PDSignature createSignatureDictionary(final SignatureParameters parameters) {
         PDSignature signature = new PDSignature();
 
         signature.setType(COSName.getPDFName("Sig"));

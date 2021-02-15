@@ -1,9 +1,10 @@
 package com.eideasy.pdf.models;
 
 public class CompleteRequest extends AbstractSignatureRequest {
-    String signatureValue;
-    String fileContent;
-    long signatureTime;
+    private String signatureValue;
+    private String fileContent;
+    private long signatureTime;
+    private PadesDssData padesDssData;
 
     public long getSignatureTime() {
         return signatureTime;
@@ -27,5 +28,13 @@ public class CompleteRequest extends AbstractSignatureRequest {
 
     public void setFileContent(String fileContent) {
         this.fileContent = fileContent;
+    }
+
+    public PadesDssData getPadesDssData() {
+        return padesDssData;
+    }
+
+    public void setPadesDssData(PadesDssData padesDssData) {
+        this.padesDssData = padesDssData;
     }
 }
