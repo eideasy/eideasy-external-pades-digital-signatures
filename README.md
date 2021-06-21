@@ -18,7 +18,7 @@ This application can be found from dockerhub also https://hub.docker.com/reposit
 
 To build locally use these commands
 ```
-maven clean package
+mvn clean package
 sudo docker build . --no-cache -t eideasy/pades-external-digital-signatures 
 ```
 
