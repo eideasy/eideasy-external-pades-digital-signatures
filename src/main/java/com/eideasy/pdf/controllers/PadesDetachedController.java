@@ -111,44 +111,54 @@ public class PadesDetachedController {
     private COSDictionary buildDSSDictionary(PDDocument pdDocument, PadesDssData padesDssData)
             throws IOException {
         COSDictionary dss = new COSDictionary();
+        COSDictionary vri = new COSDictionary();
 
+        COSArray certArray = new COSArray();
         if (padesDssData.getCertificates().size() > 0) {
-            COSArray array = new COSArray();
             for (String cert : padesDssData.getCertificates()) {
                 COSStream stream = pdDocument.getDocument().createCOSStream();
                 try (OutputStream unfilteredStream = stream.createOutputStream()) {
                     unfilteredStream.write(Base64.getDecoder().decode(cert));
                     unfilteredStream.flush();
                 }
-                array.add(stream);
+                certArray.add(stream);
             }
-            dss.setItem("Certs", array);
+            vri.setItem("Cert", certArray);
         }
 
+        COSArray ocspArray = new COSArray();
         if (padesDssData.getOcsps().size() > 0) {
-            COSArray array = new COSArray();
             for (String cert : padesDssData.getOcsps()) {
                 COSStream stream = pdDocument.getDocument().createCOSStream();
                 try (OutputStream unfilteredStream = stream.createOutputStream()) {
                     unfilteredStream.write(Base64.getDecoder().decode(cert));
                     unfilteredStream.flush();
                 }
-                array.add(stream);
+                ocspArray.add(stream);
             }
-            dss.setItem("OCSPs", array);
+            vri.setItem("OCSP", ocspArray);
         }
 
+        COSArray crlArray = new COSArray();
         if (padesDssData.getCrls().size() > 0) {
-            COSArray array = new COSArray();
             for (String cert : padesDssData.getCrls()) {
                 COSStream stream = pdDocument.getDocument().createCOSStream();
                 try (OutputStream unfilteredStream = stream.createOutputStream()) {
                     unfilteredStream.write(Base64.getDecoder().decode(cert));
                     unfilteredStream.flush();
                 }
-                array.add(stream);
+                crlArray.add(stream);
             }
-            dss.setItem("CRLs", array);
+            vri.setItem("CRL", crlArray);
+        }
+
+        dss.setItem("VRI", vri);
+        dss.setItem("Certs", certArray);
+        if (padesDssData.getOcsps().size() > 0) {
+            dss.setItem("OCSPs", ocspArray);
+        }
+        if (padesDssData.getCrls().size() > 0) {
+            dss.setItem("CRLs", crlArray);
         }
 
         return dss;
@@ -165,7 +175,7 @@ public class PadesDetachedController {
         SignatureOptions options = new SignatureOptions();
 
         // Enough room for signature, timestamp and OCSP for baseline-LT profile.
-        options.setPreferredSignatureSize(SignatureOptions.DEFAULT_SIGNATURE_SIZE * 2);
+        options.setPreferredSignatureSize(SignatureOptions.DEFAULT_SIGNATURE_SIZE);
         document.addSignature(signature, options);
         ExternalSigningSupport externalSigning = document.saveIncrementalForExternalSigning(out);
 
