@@ -51,6 +51,7 @@ public class PadesDetachedController {
         parameters.setLocation(request.getLocation());
         parameters.setReason(request.getReason());
         parameters.setSignerName(request.getSignerName());
+        VisualSignatureParameters visualSignatureParameters = request.getVisualSignature();
 
         logger.info("Completing PDF signature with value: " + request.getSignatureValue() + ", params=" + parameters);
         CompleteResponse response = new CompleteResponse();
@@ -61,7 +62,7 @@ public class PadesDetachedController {
             byte[] signatureBytes = Base64.getDecoder().decode(request.getSignatureValue());
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-            signDetached(parameters, document, signatureBytes, baos);
+            signDetached(parameters, document, signatureBytes, baos, visualSignatureParameters);
 
             baos = addPadesDss(request.getPadesDssData(), baos);
 
@@ -84,6 +85,7 @@ public class PadesDetachedController {
         parameters.setLocation(request.getLocation());
         parameters.setReason(request.getReason());
         parameters.setSignerName(request.getSignerName());
+        VisualSignatureParameters visualSignatureParameters = request.getVisualSignature();
 
         logger.info("Preparing PDF, params=" + parameters);
         PrepareResponse response = new PrepareResponse();
@@ -93,12 +95,19 @@ public class PadesDetachedController {
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-            byte[] digest = signDetached(parameters, document, null, baos);
-            String digestString = HexUtils.toHexString(digest);
+            DigestData digestData = signDetached(parameters, document, null, baos, visualSignatureParameters);
+            String digestString = HexUtils.toHexString(digestData.getDigest());
+
 
             response.setHexDigest(digestString);
-            response.setDigest(Base64.getEncoder().encodeToString(digest));
+            response.setDigest(Base64.getEncoder().encodeToString(digestData.getDigest()));
             response.setSignatureTime(parameters.getSignatureTime());
+
+            PDDocument modifiedDocument = digestData.getDocument();
+            ByteArrayOutputStream modifiedDocumentBaos = new ByteArrayOutputStream();
+            modifiedDocument.save(modifiedDocumentBaos);
+
+            response.setPreparedPdf(Base64.getEncoder().encodeToString(modifiedDocumentBaos.toByteArray()));
 
             logger.info("Prepared PDF with digest: " + digestString + ", signatureTime=" + response.getSignatureTime());
         } catch (Throwable e) {
@@ -184,7 +193,7 @@ public class PadesDetachedController {
         return dss;
     }
 
-    protected byte[] signDetached(SignatureParameters parameters, PDDocument document, byte[] signatureBytes, OutputStream out)
+    protected DigestData signDetached(SignatureParameters parameters, PDDocument document, byte[] signatureBytes, OutputStream out, VisualSignatureParameters visualSignatureParameters)
             throws IOException, NoSuchAlgorithmException {
 
         if (document.getDocumentId() == null) {
@@ -196,10 +205,15 @@ public class PadesDetachedController {
 
         // Enough room for signature, timestamp and OCSP for baseline-LT profile.
         options.setPreferredSignatureSize(SignatureOptions.DEFAULT_SIGNATURE_SIZE);
-        Rectangle2D humanRect = new Rectangle2D.Float(100, 200, 150, 50);
+        Rectangle2D humanRect = new Rectangle2D.Float(
+            visualSignatureParameters.getX(),
+            visualSignatureParameters.getY(),
+            visualSignatureParameters.getWidth(),
+            visualSignatureParameters.getHeight()
+        );
         PDRectangle rect = null;
         rect = createSignatureRectangle(document, humanRect);
-        options.setVisualSignature(createVisualSignatureTemplate(document, 0, rect, signature));
+        options.setVisualSignature(createVisualSignatureTemplate(document, visualSignatureParameters.getPageNum(), rect, signature));
         document.addSignature(signature, options);
         ExternalSigningSupport externalSigning = document.saveIncrementalForExternalSigning(out);
 
@@ -211,7 +225,11 @@ public class PadesDetachedController {
             externalSigning.setSignature(signatureBytes);
         }
 
-        return digestBytes;
+        DigestData digestData = new DigestData();
+        digestData.setDigest(digestBytes);
+        digestData.setDocument(document);
+
+        return digestData;
     }
 
     protected PDSignature createSignatureDictionary(final SignatureParameters parameters) {
@@ -353,11 +371,6 @@ public class PadesDetachedController {
                 {
                     cs.transform(initialScale);
                 }
-
-                // show background (just for debugging, to see the rect size + position)
-                cs.setNonStrokingColor(Color.yellow);
-                cs.addRect(-5000, -5000, 10000, 10000);
-                cs.fill();
 
                 File imageFile = new File("images/dummy.png");
                 if (imageFile != null)

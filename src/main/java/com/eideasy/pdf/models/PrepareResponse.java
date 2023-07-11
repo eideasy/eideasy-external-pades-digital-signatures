@@ -5,6 +5,8 @@ public class PrepareResponse extends ApiResponse {
     private String digest;
     private String hexDigest;
 
+    private String preparedPdf;
+
     public long getSignatureTime() {
         return signatureTime;
     }
@@ -27,5 +29,13 @@ public class PrepareResponse extends ApiResponse {
 
     public void setDigest(String digest) {
         this.digest = digest;
+    }
+
+    public String getPreparedPdf() {
+        return preparedPdf;
+    }
+
+    public void setPreparedPdf(String preparedPdf) {
+        this.preparedPdf = preparedPdf;
     }
 }
