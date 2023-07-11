@@ -213,7 +213,12 @@ public class PadesDetachedController {
         );
         PDRectangle rect = null;
         rect = createSignatureRectangle(document, humanRect);
-        options.setVisualSignature(createVisualSignatureTemplate(document, visualSignatureParameters.getPageNum(), rect, signature));
+        options.setVisualSignature(createVisualSignatureTemplate(
+            document,
+            visualSignatureParameters.getPageNum(),
+            rect,
+            visualSignatureParameters.getImage()
+        ));
         document.addSignature(signature, options);
         ExternalSigningSupport externalSigning = document.saveIncrementalForExternalSigning(out);
 
@@ -306,9 +311,12 @@ public class PadesDetachedController {
     }
 
     // create a template PDF document with empty signature and return it as a stream.
-    private InputStream createVisualSignatureTemplate(PDDocument srcDoc, int pageNum,
-                                                      PDRectangle rect, PDSignature signature) throws IOException
-    {
+    private InputStream createVisualSignatureTemplate(
+            PDDocument srcDoc,
+            int pageNum,
+            PDRectangle rect,
+            String imageInBase64
+    ) throws IOException {
         try (PDDocument doc = new PDDocument())
         {
             PDPage page = new PDPage(srcDoc.getPage(pageNum).getMediaBox());
@@ -372,14 +380,16 @@ public class PadesDetachedController {
                     cs.transform(initialScale);
                 }
 
-                File imageFile = new File("images/dummy.png");
-                if (imageFile != null)
+                //File imageFile = new File("images/dummy.png");
+                if (imageInBase64 != null)
                 {
+                    byte[] image = Base64.getDecoder().decode(imageInBase64);
                     // show background image
                     // save and restore graphics if the image is too large and needs to be scaled
                     cs.saveGraphicsState();
                     cs.transform(Matrix.getScaleInstance(0.25f, 0.25f));
-                    PDImageXObject img = PDImageXObject.createFromFileByExtension(imageFile, doc);
+                    //PDImageXObject img = PDImageXObject.createFromFileByExtension(imageFile, doc);
+                    PDImageXObject img = PDImageXObject.createFromByteArray(doc, image, "signature.png");
                     cs.drawImage(img, 0, 0);
                     cs.restoreGraphicsState();
                 }
