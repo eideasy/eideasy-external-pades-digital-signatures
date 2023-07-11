@@ -5,7 +5,7 @@ public class PrepareResponse extends ApiResponse {
     private String digest;
     private String hexDigest;
 
-    private String preparedPdf;
+    private String preparedPdf = null;
 
     public long getSignatureTime() {
         return signatureTime;

@@ -107,7 +107,7 @@ public class PadesDetachedController {
             ByteArrayOutputStream modifiedDocumentBaos = new ByteArrayOutputStream();
             modifiedDocument.save(modifiedDocumentBaos);
 
-            response.setPreparedPdf(Base64.getEncoder().encodeToString(modifiedDocumentBaos.toByteArray()));
+            //response.setPreparedPdf(Base64.getEncoder().encodeToString(modifiedDocumentBaos.toByteArray()));
 
             logger.info("Prepared PDF with digest: " + digestString + ", signatureTime=" + response.getSignatureTime());
         } catch (Throwable e) {
@@ -208,24 +208,28 @@ public class PadesDetachedController {
         PDSignature signature = createSignatureDictionary(parameters);
         SignatureOptions options = new SignatureOptions();
 
-        options.setPage(visualSignatureParameters.getPageNum() - 1);
 
         // Enough room for signature, timestamp and OCSP for baseline-LT profile.
         options.setPreferredSignatureSize(SignatureOptions.DEFAULT_SIGNATURE_SIZE);
-        Rectangle2D humanRect = new Rectangle2D.Float(
-            visualSignatureParameters.getX(),
-            visualSignatureParameters.getY(),
-            visualSignatureParameters.getWidth(),
-            visualSignatureParameters.getHeight()
-        );
-        PDRectangle rect = null;
-        rect = createSignatureRectangle(document, humanRect);
-        options.setVisualSignature(createVisualSignatureTemplate(
-            document,
-            visualSignatureParameters.getPageNum(),
-            rect,
-            visualSignatureParameters.getImage()
-        ));
+
+        if (visualSignatureParameters != null) {
+            options.setPage(visualSignatureParameters.getPageNum() - 1);
+            Rectangle2D humanRect = new Rectangle2D.Float(
+                visualSignatureParameters.getX(),
+                visualSignatureParameters.getY(),
+                visualSignatureParameters.getWidth(),
+                visualSignatureParameters.getHeight()
+            );
+            PDRectangle rect = null;
+            rect = createSignatureRectangle(document, humanRect);
+            options.setVisualSignature(createVisualSignatureTemplate(
+                document,
+                visualSignatureParameters.getPageNum(),
+                rect,
+                visualSignatureParameters.getImage()
+            ));
+        }
+
         document.addSignature(signature, options);
         ExternalSigningSupport externalSigning = document.saveIncrementalForExternalSigning(out);
 

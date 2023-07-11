@@ -7,7 +7,7 @@ public class PrepareRequest extends AbstractSignatureRequest{
         return fileContent;
     }
 
-    private VisualSignatureParameters visualSignature;
+    private VisualSignatureParameters visualSignature = null;
 
     public VisualSignatureParameters getVisualSignature() {
         return visualSignature;
