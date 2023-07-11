@@ -222,6 +222,7 @@ public class PadesDetachedController {
         rect = createSignatureRectangle(document, humanRect);
         options.setVisualSignature(createVisualSignatureTemplate(
             document,
+            visualSignatureParameters.getPageNum(),
             rect,
             visualSignatureParameters.getImage()
         ));
@@ -284,7 +285,12 @@ public class PadesDetachedController {
         PDPage page = doc.getPage(0);
         PDRectangle pageRect = page.getCropBox();
         PDRectangle rect = new PDRectangle();
+        rect.setLowerLeftX(x);
+        rect.setUpperRightX(x + width);
+        rect.setLowerLeftY(y);
+        rect.setUpperRightY(y + height);
         // signing should be at the same position regardless of page rotation.
+        /*
         switch (page.getRotation())
         {
             case 90:
@@ -313,18 +319,20 @@ public class PadesDetachedController {
                 rect.setUpperRightY(pageRect.getHeight() - y);
                 break;
         }
+        */
         return rect;
     }
 
     // create a template PDF document with empty signature and return it as a stream.
     private InputStream createVisualSignatureTemplate(
             PDDocument srcDoc,
+            int pageNum,
             PDRectangle rect,
             String imageInBase64
     ) throws IOException {
         try (PDDocument doc = new PDDocument())
         {
-            PDPage page = new PDPage(srcDoc.getPage(0).getMediaBox());
+            PDPage page = new PDPage(srcDoc.getPage(pageNum).getMediaBox());
             doc.addPage(page);
             PDAcroForm acroForm = new PDAcroForm(doc);
             doc.getDocumentCatalog().setAcroForm(acroForm);
@@ -388,12 +396,12 @@ public class PadesDetachedController {
                 if (imageInBase64 != null)
                 {
                     byte[] image = Base64.getDecoder().decode(imageInBase64);
-                    // show background image
-                    // save and restore graphics if the image is too large and needs to be scaled
                     cs.saveGraphicsState();
-                    cs.transform(Matrix.getScaleInstance(0.25f, 0.25f));
                     PDImageXObject img = PDImageXObject.createFromByteArray(doc, image, "signature.png");
-                    cs.drawImage(img, 0, 0);
+
+                    float imageWidth = bbox.getWidth();
+                    float imageHeight = bbox.getHeight();
+                    cs.drawImage(img, 0, 0, imageWidth, imageHeight);
                     cs.restoreGraphicsState();
                 }
 
