@@ -193,8 +193,13 @@ public class PadesDetachedController {
         return dss;
     }
 
-    protected DigestData signDetached(SignatureParameters parameters, PDDocument document, byte[] signatureBytes, OutputStream out, VisualSignatureParameters visualSignatureParameters)
-            throws IOException, NoSuchAlgorithmException {
+    protected DigestData signDetached(
+        SignatureParameters parameters,
+        PDDocument document,
+        byte[] signatureBytes,
+        OutputStream out,
+        VisualSignatureParameters visualSignatureParameters
+    ) throws IOException, NoSuchAlgorithmException {
 
         if (document.getDocumentId() == null) {
             document.setDocumentId(parameters.getSignatureTime());
@@ -202,6 +207,8 @@ public class PadesDetachedController {
 
         PDSignature signature = createSignatureDictionary(parameters);
         SignatureOptions options = new SignatureOptions();
+
+        options.setPage(visualSignatureParameters.getPageNum() - 1);
 
         // Enough room for signature, timestamp and OCSP for baseline-LT profile.
         options.setPreferredSignatureSize(SignatureOptions.DEFAULT_SIGNATURE_SIZE);
@@ -215,7 +222,6 @@ public class PadesDetachedController {
         rect = createSignatureRectangle(document, humanRect);
         options.setVisualSignature(createVisualSignatureTemplate(
             document,
-            visualSignatureParameters.getPageNum(),
             rect,
             visualSignatureParameters.getImage()
         ));
@@ -313,13 +319,12 @@ public class PadesDetachedController {
     // create a template PDF document with empty signature and return it as a stream.
     private InputStream createVisualSignatureTemplate(
             PDDocument srcDoc,
-            int pageNum,
             PDRectangle rect,
             String imageInBase64
     ) throws IOException {
         try (PDDocument doc = new PDDocument())
         {
-            PDPage page = new PDPage(srcDoc.getPage(pageNum).getMediaBox());
+            PDPage page = new PDPage(srcDoc.getPage(0).getMediaBox());
             doc.addPage(page);
             PDAcroForm acroForm = new PDAcroForm(doc);
             doc.getDocumentCatalog().setAcroForm(acroForm);
@@ -342,7 +347,7 @@ public class PadesDetachedController {
             PDRectangle bbox = new PDRectangle(rect.getWidth(), rect.getHeight());
             float height = bbox.getHeight();
             Matrix initialScale = null;
-            switch (srcDoc.getPage(pageNum).getRotation())
+            switch (srcDoc.getPage(0).getRotation())
             {
                 case 90:
                     form.setMatrix(AffineTransform.getQuadrantRotateInstance(1));
@@ -380,7 +385,6 @@ public class PadesDetachedController {
                     cs.transform(initialScale);
                 }
 
-                //File imageFile = new File("images/dummy.png");
                 if (imageInBase64 != null)
                 {
                     byte[] image = Base64.getDecoder().decode(imageInBase64);
@@ -388,7 +392,6 @@ public class PadesDetachedController {
                     // save and restore graphics if the image is too large and needs to be scaled
                     cs.saveGraphicsState();
                     cs.transform(Matrix.getScaleInstance(0.25f, 0.25f));
-                    //PDImageXObject img = PDImageXObject.createFromFileByExtension(imageFile, doc);
                     PDImageXObject img = PDImageXObject.createFromByteArray(doc, image, "signature.png");
                     cs.drawImage(img, 0, 0);
                     cs.restoreGraphicsState();
