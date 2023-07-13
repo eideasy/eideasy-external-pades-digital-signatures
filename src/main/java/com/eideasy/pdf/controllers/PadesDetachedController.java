@@ -293,10 +293,10 @@ public class PadesDetachedController {
         switch (page.getRotation())
         {
             case 90:
+                rect.setLowerLeftX(pageRect.getWidth() - y - height);
+                rect.setUpperRightX(pageRect.getWidth() - y);
                 rect.setLowerLeftY(x);
                 rect.setUpperRightY(x + width);
-                rect.setLowerLeftX(y);
-                rect.setUpperRightX(y + height);
                 break;
             case 180:
                 rect.setUpperRightX(pageRect.getWidth() - x);
