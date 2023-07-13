@@ -287,10 +287,6 @@ public class PadesDetachedController {
         PDPage page = doc.getPage(0);
         PDRectangle pageRect = page.getCropBox();
         PDRectangle rect = new PDRectangle();
-        rect.setLowerLeftX(x);
-        rect.setUpperRightX(x + width);
-        rect.setLowerLeftY(y);
-        rect.setUpperRightY(y + height);
         logger.info("ROTATION: " + page.getRotation());
 
         // signing should be at the same position regardless of page rotation.
@@ -309,17 +305,17 @@ public class PadesDetachedController {
                 rect.setUpperRightY(y + height);
                 break;
             case 270:
+                rect.setLowerLeftX(y);
+                rect.setUpperRightX(y + height);
                 rect.setLowerLeftY(pageRect.getHeight() - x - width);
                 rect.setUpperRightY(pageRect.getHeight() - x);
-                rect.setLowerLeftX(pageRect.getWidth() - y - height);
-                rect.setUpperRightX(pageRect.getWidth() - y);
                 break;
             case 0:
             default:
                 rect.setLowerLeftX(x);
                 rect.setUpperRightX(x + width);
-                rect.setLowerLeftY(pageRect.getHeight() - y - height);
-                rect.setUpperRightY(pageRect.getHeight() - y);
+                rect.setLowerLeftY(y);
+                rect.setUpperRightY(y + height);
                 break;
         }
 
@@ -356,7 +352,6 @@ public class PadesDetachedController {
             form.setResources(res);
             form.setFormType(1);
             PDRectangle bbox = new PDRectangle(rect.getWidth(), rect.getHeight());
-            float height = bbox.getHeight();
             Matrix initialScale = null;
             int pageRotation = srcDoc.getPage(0).getRotation();
             switch (pageRotation)
@@ -364,7 +359,6 @@ public class PadesDetachedController {
                 case 90:
                     form.setMatrix(AffineTransform.getQuadrantRotateInstance(1));
                     initialScale = Matrix.getScaleInstance(bbox.getWidth() / bbox.getHeight(), bbox.getHeight() / bbox.getWidth());
-                    height = bbox.getWidth();
                     break;
                 case 180:
                     form.setMatrix(AffineTransform.getQuadrantRotateInstance(2));
@@ -372,7 +366,6 @@ public class PadesDetachedController {
                 case 270:
                     form.setMatrix(AffineTransform.getQuadrantRotateInstance(3));
                     initialScale = Matrix.getScaleInstance(bbox.getWidth() / bbox.getHeight(), bbox.getHeight() / bbox.getWidth());
-                    height = bbox.getWidth();
                     break;
                 default:
                     break;
@@ -388,9 +381,6 @@ public class PadesDetachedController {
 
             try (PDPageContentStream cs = new PDPageContentStream(doc, appearanceStream))
             {
-                // for 90° and 270° scale ratio of width / height
-                // not really sure about this
-                // why does scale have no effect when done in the form matrix???
                 if (initialScale != null)
                 {
                     cs.transform(initialScale);
