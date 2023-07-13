@@ -5,6 +5,7 @@ public class CompleteRequest extends AbstractSignatureRequest {
     private String fileContent;
     private long signatureTime;
     private PadesDssData padesDssData;
+    private VisualSignatureParameters visualSignature = null;
 
     public long getSignatureTime() {
         return signatureTime;
@@ -36,5 +37,13 @@ public class CompleteRequest extends AbstractSignatureRequest {
 
     public void setPadesDssData(PadesDssData padesDssData) {
         this.padesDssData = padesDssData;
+    }
+
+    public VisualSignatureParameters getVisualSignature() {
+        return visualSignature;
+    }
+
+    public void setVisualSignature(VisualSignatureParameters visualSignature) {
+        this.visualSignature = visualSignature;
     }
 }

@@ -7,6 +7,16 @@ public class PrepareRequest extends AbstractSignatureRequest{
         return fileContent;
     }
 
+    private VisualSignatureParameters visualSignature = null;
+
+    public VisualSignatureParameters getVisualSignature() {
+        return visualSignature;
+    }
+
+    public void setVisualSignature(VisualSignatureParameters visualSignature) {
+        this.visualSignature = visualSignature;
+    }
+
     public void setFileContent(String fileContent) {
         this.fileContent = fileContent;
     }
