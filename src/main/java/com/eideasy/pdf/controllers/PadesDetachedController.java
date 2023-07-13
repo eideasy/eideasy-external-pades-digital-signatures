@@ -9,8 +9,6 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.common.PDStream;
-import org.apache.pdfbox.pdmodel.font.PDFont;
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
@@ -30,7 +28,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.io.*;
@@ -107,7 +104,7 @@ public class PadesDetachedController {
             ByteArrayOutputStream modifiedDocumentBaos = new ByteArrayOutputStream();
             modifiedDocument.save(modifiedDocumentBaos);
 
-            //response.setPreparedPdf(Base64.getEncoder().encodeToString(modifiedDocumentBaos.toByteArray()));
+            response.setPreparedPdf(Base64.getEncoder().encodeToString(modifiedDocumentBaos.toByteArray()));
 
             logger.info("Prepared PDF with digest: " + digestString + ", signatureTime=" + response.getSignatureTime());
         } catch (Throwable e) {
@@ -213,7 +210,8 @@ public class PadesDetachedController {
         options.setPreferredSignatureSize(SignatureOptions.DEFAULT_SIGNATURE_SIZE);
 
         if (visualSignatureParameters != null) {
-            options.setPage(visualSignatureParameters.getPageNum() - 1);
+            int pageNum = visualSignatureParameters.getPageNum() - 1;
+            options.setPage(pageNum);
             Rectangle2D humanRect = new Rectangle2D.Float(
                 visualSignatureParameters.getX(),
                 visualSignatureParameters.getY(),
@@ -224,7 +222,7 @@ public class PadesDetachedController {
             rect = createSignatureRectangle(document, humanRect);
             options.setVisualSignature(createVisualSignatureTemplate(
                 document,
-                visualSignatureParameters.getPageNum(),
+                pageNum,
                 rect,
                 visualSignatureParameters.getImage()
             ));
@@ -293,8 +291,9 @@ public class PadesDetachedController {
         rect.setUpperRightX(x + width);
         rect.setLowerLeftY(y);
         rect.setUpperRightY(y + height);
+        logger.info("ROTATION: " + page.getRotation());
+
         // signing should be at the same position regardless of page rotation.
-        /*
         switch (page.getRotation())
         {
             case 90:
@@ -323,7 +322,7 @@ public class PadesDetachedController {
                 rect.setUpperRightY(pageRect.getHeight() - y);
                 break;
         }
-        */
+
         return rect;
     }
 
@@ -359,7 +358,8 @@ public class PadesDetachedController {
             PDRectangle bbox = new PDRectangle(rect.getWidth(), rect.getHeight());
             float height = bbox.getHeight();
             Matrix initialScale = null;
-            switch (srcDoc.getPage(0).getRotation())
+            int pageRotation = srcDoc.getPage(0).getRotation();
+            switch (pageRotation)
             {
                 case 90:
                     form.setMatrix(AffineTransform.getQuadrantRotateInstance(1));
@@ -374,7 +374,6 @@ public class PadesDetachedController {
                     initialScale = Matrix.getScaleInstance(bbox.getWidth() / bbox.getHeight(), bbox.getHeight() / bbox.getWidth());
                     height = bbox.getWidth();
                     break;
-                case 0:
                 default:
                     break;
             }
@@ -405,6 +404,10 @@ public class PadesDetachedController {
 
                     float imageWidth = bbox.getWidth();
                     float imageHeight = bbox.getHeight();
+                    if (pageRotation == 90 || pageRotation == 270) {
+                        imageWidth = bbox.getHeight();
+                        imageHeight = bbox.getWidth();
+                    }
                     cs.drawImage(img, 0, 0, imageWidth, imageHeight);
                     cs.restoreGraphicsState();
                 }
