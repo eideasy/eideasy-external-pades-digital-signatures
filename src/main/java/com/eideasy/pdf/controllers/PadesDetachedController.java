@@ -104,8 +104,6 @@ public class PadesDetachedController {
             ByteArrayOutputStream modifiedDocumentBaos = new ByteArrayOutputStream();
             modifiedDocument.save(modifiedDocumentBaos);
 
-            response.setPreparedPdf(Base64.getEncoder().encodeToString(modifiedDocumentBaos.toByteArray()));
-
             logger.info("Prepared PDF with digest: " + digestString + ", signatureTime=" + response.getSignatureTime());
         } catch (Throwable e) {
             logger.error("PDF parsing failed", e);
@@ -287,7 +285,6 @@ public class PadesDetachedController {
         PDPage page = doc.getPage(0);
         PDRectangle pageRect = page.getCropBox();
         PDRectangle rect = new PDRectangle();
-        logger.info("ROTATION: " + page.getRotation());
 
         // signing should be at the same position regardless of page rotation.
         switch (page.getRotation())
