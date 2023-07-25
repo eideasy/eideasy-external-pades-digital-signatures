@@ -61,7 +61,7 @@ public class PadesDetachedController {
 
             signDetached(parameters, document, signatureBytes, baos, visualSignatureParameters);
 
-            baos = addPadesDss(request.getPadesDssData(), baos);
+            //baos = addPadesDss(request.getPadesDssData(), baos);
 
             response.setSignedFile(Base64.getEncoder().encodeToString(baos.toByteArray()));
 
@@ -249,7 +249,7 @@ public class PadesDetachedController {
 
         signature.setType(COSName.getPDFName("Sig"));
         signature.setFilter(PDSignature.FILTER_ADOBE_PPKLITE);
-        signature.setSubFilter(PDSignature.SUBFILTER_ETSI_CADES_DETACHED);
+        signature.setSubFilter(PDSignature.SUBFILTER_ADBE_PKCS7_DETACHED);
 
         if (notEmpty(parameters.getSignerName())) {
             signature.setName(parameters.getSignerName());
