@@ -95,14 +95,9 @@ public class PadesDetachedController {
             DigestData digestData = signDetached(parameters, document, null, baos, visualSignatureParameters);
             String digestString = HexUtils.toHexString(digestData.getDigest());
 
-
             response.setHexDigest(digestString);
             response.setDigest(Base64.getEncoder().encodeToString(digestData.getDigest()));
             response.setSignatureTime(parameters.getSignatureTime());
-
-            PDDocument modifiedDocument = digestData.getDocument();
-            ByteArrayOutputStream modifiedDocumentBaos = new ByteArrayOutputStream();
-            modifiedDocument.save(modifiedDocumentBaos);
 
             logger.info("Prepared PDF with digest: " + digestString + ", signatureTime=" + response.getSignatureTime());
         } catch (Throwable e) {
@@ -129,6 +124,7 @@ public class PadesDetachedController {
         baos = new ByteArrayOutputStream();
 
         pdDocument.saveIncremental(baos);
+        pdDocument.close();
         return baos;
     }
 
@@ -240,6 +236,9 @@ public class PadesDetachedController {
         DigestData digestData = new DigestData();
         digestData.setDigest(digestBytes);
         digestData.setDocument(document);
+
+        document.close();
+        IOUtils.closeQuietly(options);
 
         return digestData;
     }
