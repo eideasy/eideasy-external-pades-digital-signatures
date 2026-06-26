@@ -1,5 +1,11 @@
-FROM openjdk:11
-WORKDIR /app
+FROM eclipse-temurin:21-jre-alpine
 
-COPY ./target/pdf-1.0.0-SNAPSHOT.jar ./pdf-1.0.0-SNAPSHOT.jar
-CMD [ "java", "-jar", "pdf-1.0.0-SNAPSHOT.jar" ]
+WORKDIR /app
+RUN addgroup -S app && adduser -S -G app app
+
+COPY --chown=app:app target/*.jar app.jar
+
+EXPOSE 8084
+USER app
+
+ENTRYPOINT ["java", "-jar", "app.jar"]
