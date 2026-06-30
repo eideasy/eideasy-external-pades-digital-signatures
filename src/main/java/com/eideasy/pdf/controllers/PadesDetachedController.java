@@ -279,8 +279,8 @@ public class PadesDetachedController {
     {
         float x = (float) humanRect.getX();
         float y = (float) humanRect.getY();
-        float width = ((float) humanRect.getWidth()) / (300F / 72F);
-        float height = ((float) humanRect.getHeight()) / (300F / 72F);
+        float width = (float) humanRect.getWidth();
+        float height = (float) humanRect.getHeight();
         PDPage page = doc.getPage(0);
         PDRectangle pageRect = page.getCropBox();
         PDRectangle rect = new PDRectangle();
