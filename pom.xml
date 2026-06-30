@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.eideasy</groupId>
     <artifactId>pdf</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT2</version>
     <name>PDF detached digital signatures</name>
     <description>PDF detached PAdES and ETSI.CAdES.detached powered by eID Easy</description>
 
