@@ -19,7 +19,13 @@ This application can be found from dockerhub also https://hub.docker.com/reposit
 To build locally use these commands
 ```
 mvn clean package
-sudo docker build . --no-cache -t eideasy/pades-external-digital-signatures 
+docker buildx build . --load --no-cache --platform linux/amd64 -t eideasy/pades-external-digital-signatures:local
+```
+
+To publish a multi-architecture image, use a registry-qualified tag and push the manifest list:
+```
+mvn clean package
+docker buildx build . --platform linux/amd64,linux/arm64 -t eideasy/pades-external-digital-signatures:latest --push
 ```
 
 Following will remove any existing instance and install new one that will listen to localhost port 8082. 
@@ -35,4 +41,3 @@ Postman documentation for these API calls can be found from https://documenter.g
 There is also free service for testing purposes running at https://detached-pdf.eideasy.com
 
 If you do not have any way to create ETSI.CAdES.detached digital signatures then you can use eID Easy service. Start with API call "/api/signatures/prepare-files-for-signing" and send the digest as the PDF file content. More information at https://documenter.getpostman.com/view/3869493/Szf6WoG1#74939bae-2c9b-459c-9f0b-8070d2bd32f7
-
